@@ -3,11 +3,11 @@ package ru.itmo.tgbot.service
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import ru.itmo.tgbot.exception.event.EventAlreadyExistsException
-import ru.itmo.tgbot.exception.event.NoEventFoundException
-import ru.itmo.tgbot.exception.user.NoAdminPermissionException
-import ru.itmo.tgbot.exception.user.NoUserFoundException
-import ru.itmo.tgbot.exception.user.UserAlreadyExistsException
+import ru.itmo.tgbot.exception.EventAlreadyExistsException
+import ru.itmo.tgbot.exception.NoAdminPermissionException
+import ru.itmo.tgbot.exception.NoEventFoundException
+import ru.itmo.tgbot.exception.NoUserFoundException
+import ru.itmo.tgbot.exception.UserAlreadyExistsException
 import ru.itmo.tgbot.model.Event
 import ru.itmo.tgbot.model.Role
 import ru.itmo.tgbot.model.User

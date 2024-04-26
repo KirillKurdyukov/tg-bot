@@ -1,7 +1,14 @@
 package ru.itmo.tgbot.model
 
-import jakarta.persistence.*
-import ru.itmo.tgbot.exception.user.ParticipationInEventNotFoundException
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
 
 typealias EventId = Long
 
@@ -21,7 +28,7 @@ class Event(
     }
 
     fun removeUser(user: User) {
-        val removed = users.removeIf {  it.id == user.id }
+        val removed = users.removeIf { it.id == user.id }
         if (!removed) throw ParticipationInEventNotFoundException()
         user.event = null
     }
