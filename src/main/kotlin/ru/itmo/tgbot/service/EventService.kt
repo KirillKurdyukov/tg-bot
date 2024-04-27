@@ -43,6 +43,14 @@ class EventService(
         }
     }
 
+    fun hasUser(telegramUserId: String): Boolean {
+        return userRepository.findUserByTelegramId(telegramUserId) != null
+    }
+
+    fun getUser(telegramUserId: String): User {
+        return userRepository.findUserByTelegramId(telegramUserId) ?: throw NoUserFoundException()
+    }
+
     @Transactional
     fun addUserToEvent(userTelegramId: String, eventName: String) {
         val event = eventRepository.findEventByName(eventName) ?: throw NoEventFoundException()
