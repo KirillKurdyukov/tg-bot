@@ -28,6 +28,10 @@ class TgApiController(
   , LongPollingSingleThreadUpdateConsumer
 {
 
+    companion object {
+        private val INCORRECT_NUMBER_ARGUMENTS = "Incorrect number of arguments\n\nUsage: "
+    }
+
     private val telegramClient = OkHttpTelegramClient(getBotToken())
 
     override fun getBotToken(): String {
@@ -88,20 +92,26 @@ class TgApiController(
     }
 
     private fun help(userTelegramId: String): SendMessage.SendMessageBuilder<*, *> {
-        var text = "List of available commands:\n"
-            .plus("\n")
-            .plus("/start - Show start message\n")
-            .plus("/help  - Show help\n")
-            .plus("/whoami - Who am I?\n")
-            .plus("/check_in <event> - Check in\n")
-            .plus("/check_out <event> - Check out\n")
-            .plus("/list_users <event> - List users that still participate in event\n\n")
+        var text = """
+            |List of available commands:
+            |
+            |/start - Show start message
+            |/help  - Show help
+            |/whoami - Who am I?
+            |/check_in <event> - Check in
+            |/check_out <event> - Check out
+            |/list_users <event> - List users that still participate in event
+            |
+            |
+        """.trimMargin()
 
         val user = eventService.getUser(userTelegramId);
         if (user.role == Role.ADMIN) {
-            text = text.plus("Admin commands:\n")
-                .plus("\n")
-                .plus("/add_event <event> - Add event\n")
+            text = text.plus("""
+                |Admin commands:
+                |
+                |/add_event <event> - Add event
+            """.trimMargin())
         }
 
         return SendMessage
@@ -111,11 +121,13 @@ class TgApiController(
 
     private fun whoAmI(userTelegramId: String): SendMessage.SendMessageBuilder<*, *> {
         val user = eventService.getUser(userTelegramId);
-        var text = "id: `${user.telegramId}`\n"
-            .plus("username: @${user.userName}\n")
+        var text = """
+            |id: `${user.telegramId}`
+            |username: @${user.userName}
+        """.trimMargin()
         
         if (user.role == Role.ADMIN) {
-            text = text.plus("\nyou are admin\\!")
+            text = text.plus("\n\nyou are admin\\!")
         }
         
         return SendMessage
@@ -126,8 +138,8 @@ class TgApiController(
 
     private fun checkIn(userTelegramId: String, args: List<String>): SendMessage.SendMessageBuilder<*, *> {
         if (args.size != 1) {
-            val text = "Incorrect number of arguments\n\n"
-                .plus("Usage: /check_in <event>")
+            val text = INCORRECT_NUMBER_ARGUMENTS
+                .plus("/check_in <event>")
 
             return SendMessage
                 .builder()
@@ -149,8 +161,8 @@ class TgApiController(
 
     private fun checkOut(userTelegramId: String, args: List<String>): SendMessage.SendMessageBuilder<*, *> {
         if (args.size != 1) {
-            val text = "Incorrect number of arguments\n\n"
-                .plus("Usage: /check_out <event>")
+            val text = INCORRECT_NUMBER_ARGUMENTS
+                .plus("/check_out <event>")
 
             return SendMessage
                 .builder()
@@ -176,8 +188,8 @@ class TgApiController(
 
     private fun listUsers(args: List<String>): SendMessage.SendMessageBuilder<*, *> {
         if (args.size != 1) {
-            val text = "Incorrect number of arguments\n\n"
-                .plus("Usage: /list_users <event>")
+            val text = INCORRECT_NUMBER_ARGUMENTS
+                .plus("/list_users <event>")
 
             return SendMessage
                 .builder()
@@ -205,8 +217,8 @@ class TgApiController(
 
     private fun addEvent(userTelegramId: String, args: List<String>): SendMessage.SendMessageBuilder<*, *> {
         if (args.size != 1) {
-            val text = "Incorrect number of arguments\n\n"
-                .plus("Usage: /add_event <event>")
+            val text = INCORRECT_NUMBER_ARGUMENTS
+                .plus("/add_event <event>")
 
             return SendMessage
                 .builder()
