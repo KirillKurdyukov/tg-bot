@@ -25,8 +25,6 @@ class TgBotApplicationTests : BaseTest() {
     companion object {
         private val adminUser = User(telegramId = "1", userName = "test", event = null, role = Role.ADMIN)
         private val regularUser = User(telegramId = "2", userName = "user", event = null, role = Role.REGULAR)
-        val newEvent = Event(0L, "NewEvent", mutableListOf())
-        val newEventName = "NewEvent"
     }
     
     @Autowired
