@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.persistence.FetchType
 import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
 
 typealias EventId = Long
@@ -19,7 +20,7 @@ class Event(
     val id: EventId = 0L,
     @Column(nullable = false, unique = true)
     val name: String,
-    @OneToMany(mappedBy = "event")
+    @OneToMany(mappedBy = "event", fetch = FetchType.EAGER)
     val users: MutableList<User>,
 ) {
     fun addUser(user: User) {
