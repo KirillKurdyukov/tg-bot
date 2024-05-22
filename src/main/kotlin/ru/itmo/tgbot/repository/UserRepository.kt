@@ -6,4 +6,5 @@ import ru.itmo.tgbot.model.UserId
 
 interface UserRepository: CrudRepository<User, UserId> {
     fun findUserByTelegramId(telegramId: String): User?
+    fun existsByTelegramId(telegramId: String): Boolean
 }

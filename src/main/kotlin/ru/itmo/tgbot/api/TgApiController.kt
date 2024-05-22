@@ -2,39 +2,37 @@ package ru.itmo.tgbot.api
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Controller
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
-import org.telegram.telegrambots.longpolling.BotSession;
-import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
-import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
-import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
-import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
+import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer
+import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
+import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.methods.ParseMode
+import org.telegram.telegrambots.meta.api.objects.Update
 import ru.itmo.tgbot.service.EventService
 import ru.itmo.tgbot.exception.EventAlreadyExistsException
 import ru.itmo.tgbot.exception.NoAdminPermissionException
 import ru.itmo.tgbot.exception.NoEventFoundException
 import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
 import ru.itmo.tgbot.model.Role
+import ru.itmo.tgbot.utils.WithLogging
+import ru.itmo.tgbot.utils.logger
 
 @Controller
 class TgApiController(
     private val eventService: EventService,
     @Value("\${telegram.bot.token:}") private val token: String,
-) : SpringLongPollingBot
-  , LongPollingSingleThreadUpdateConsumer
-{
+) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer, WithLogging {
+
+    private val log = logger()
 
     companion object {
-        private val INCORRECT_NUMBER_ARGUMENTS = "Incorrect number of arguments\n\nUsage: "
+        private const val INCORRECT_NUMBER_ARGUMENTS = "Incorrect number of arguments\n\nUsage: "
     }
 
-    private val telegramClient = OkHttpTelegramClient(getBotToken())
+    private val telegramClient = OkHttpTelegramClient(botToken)
 
-    override fun getBotToken(): String {
+    final override fun getBotToken(): String {
         return token
     }
 
@@ -44,17 +42,17 @@ class TgApiController(
 
     override fun consume(update: Update) {
         if (needProcessUpdate(update)) {
-            val message = update.getMessage()
+            val message = update.message
             val user = message.from
             val userTelegramId = user.id.toString()
 
             if (!eventService.hasUser(userTelegramId)) {
                 eventService.addUser(user.userName, userTelegramId)
             }
-            
+
             val words = message.text.split("\\s+".toRegex())
             val cmd = words[0]
-            val args = words.slice(1..words.size-1)
+            val args = words.slice(1 until words.size)
 
             val response = when (cmd) {
                 "/start"      -> start()
@@ -66,19 +64,16 @@ class TgApiController(
                 "/list_users" -> listUsers(args)
                 else          -> unknownCommand()
             }
-            
-            telegramClient.execute(
-                response
-                    .chatId(message.chatId)
-                    .build()
-            )
+            val sendMessage = response.chatId(message.chatId).build()
+            log.info("Processed message from user $userTelegramId with cmd $cmd, responding ${sendMessage.text}")
+            telegramClient.execute(sendMessage)
         }
     }
 
     private fun needProcessUpdate(update: Update): Boolean {
         return update.hasMessage() 
-            && update.getMessage().isUserMessage()
-            && update.getMessage().hasText()
+            && update.message.isUserMessage
+            && update.message.hasText()
     }
 
     private fun start(): SendMessage.SendMessageBuilder<*, *> {
@@ -105,7 +100,7 @@ class TgApiController(
             |
         """.trimMargin()
 
-        val user = eventService.getUser(userTelegramId);
+        val user = eventService.getUser(userTelegramId)
         if (user.role == Role.ADMIN) {
             text = text.plus("""
                 |Admin commands:
@@ -120,7 +115,7 @@ class TgApiController(
     }
 
     private fun whoAmI(userTelegramId: String): SendMessage.SendMessageBuilder<*, *> {
-        val user = eventService.getUser(userTelegramId);
+        val user = eventService.getUser(userTelegramId)
         var text = """
             |id: `${user.telegramId}`
             |username: @${user.userName}
@@ -199,12 +194,12 @@ class TgApiController(
         val eventName = args[0]
         try {
             val users = eventService.getUsers(eventName)
-            if (!users.isEmpty()) {
-                return SendMessage
+            return if (users.isNotEmpty()) {
+                SendMessage
                     .builder()
                     .text(users.joinToString("\n"))
             } else {
-                return SendMessage
+                SendMessage
                     .builder()
                     .text("No users")
             }
