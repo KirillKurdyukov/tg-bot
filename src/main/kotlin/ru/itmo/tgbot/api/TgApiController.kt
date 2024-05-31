@@ -1,5 +1,6 @@
 package ru.itmo.tgbot.api
 
+import mu.KLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Controller
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
@@ -15,18 +16,14 @@ import ru.itmo.tgbot.exception.NoAdminPermissionException
 import ru.itmo.tgbot.exception.NoEventFoundException
 import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
 import ru.itmo.tgbot.model.Role
-import ru.itmo.tgbot.utils.WithLogging
-import ru.itmo.tgbot.utils.logger
 
 @Controller
 class TgApiController(
     private val eventService: EventService,
     @Value("\${telegram.bot.token:}") private val token: String,
-) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer, WithLogging {
+) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-    private val log = logger()
-
-    companion object {
+    companion object : KLogging() {
         private const val INCORRECT_NUMBER_ARGUMENTS = "Incorrect number of arguments\n\nUsage: "
     }
 
@@ -65,7 +62,8 @@ class TgApiController(
                 else          -> unknownCommand()
             }
             val sendMessage = response.chatId(message.chatId).build()
-            log.info("Processed message from user $userTelegramId with cmd $cmd, responding ${sendMessage.text}")
+
+            logger.info("Processed message from user $userTelegramId with cmd $cmd, responding ${sendMessage.text}")
             telegramClient.execute(sendMessage)
         }
     }
@@ -118,13 +116,13 @@ class TgApiController(
         val user = eventService.getUser(userTelegramId)
         var text = """
             |id: `${user.telegramId}`
-            |username: @${user.userName}
+            |username: @${user.name}
         """.trimMargin()
         
         if (user.role == Role.ADMIN) {
             text = text.plus("\n\nyou are admin\\!")
         }
-        
+
         return SendMessage
                 .builder()
                 .parseMode(ParseMode.MARKDOWNV2)
@@ -136,21 +134,16 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/check_in <event>")
 
-            return SendMessage
-                .builder()
-                .text(text)
+            return SendMessage.builder().text(text)
         }
 
         val eventName = args[0]
         try {
             eventService.addUserToEvent(userTelegramId, eventName)
-            return SendMessage
-                .builder()
-                .text("Successfully checked-in!")
+
+            return SendMessage.builder().text("Successfully checked-in!")
         } catch (e: NoEventFoundException) {
-            return SendMessage
-                .builder()
-                .text("Event doesn't exist")
+            return SendMessage.builder().text("Event doesn't exist")
         }
     }
 
@@ -159,25 +152,17 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/check_out <event>")
 
-            return SendMessage
-                .builder()
-                .text(text)
+            return SendMessage.builder().text(text)
         }
 
         val eventName = args[0]
         try {
             eventService.deleteUserFromEvent(userTelegramId, eventName)
-            return SendMessage
-                .builder()
-                .text("Successfully checked-out!")
+            return SendMessage.builder().text("Successfully checked-out!")
         } catch (e: NoEventFoundException) {
-            return SendMessage
-                .builder()
-                .text("Event doesn't exist")
+            return SendMessage.builder().text("Event doesn't exist")
         } catch (e: ParticipationInEventNotFoundException) {
-            return SendMessage
-                .builder()
-                .text("You didn't participate in this event")
+            return SendMessage.builder().text("You didn't participate in this event")
         }
     }
 

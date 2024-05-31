@@ -20,9 +20,9 @@ class EventServiceTest {
 
     companion object {
         private val adminUser = User(1L, "1", "test", null, Role.ADMIN)
-        private val regularUser = User(id = 2L, telegramId = "2", userName = "user", event = null, role = Role.REGULAR)
+        private val regularUser = User(id = 2L, telegramId = "2", name = "user", event = null, role = Role.REGULAR)
         val newEvent = Event(0L, "NewEvent", mutableListOf())
-        val newEventName = "NewEvent"
+        const val newEventName = "NewEvent"
     }
 
     private val userRepository = mockk<UserRepository>()
@@ -71,7 +71,7 @@ class EventServiceTest {
         val userNames = eventService.getUsers(eventName)
 
         assert(userNames.size == 2)
-        assert(userNames.containsAll(listOf(adminUser.userName, regularUser.userName)))
+        assert(userNames.containsAll(listOf(adminUser.name, regularUser.name)))
     }
 
     @Test
