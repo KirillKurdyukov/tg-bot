@@ -12,21 +12,22 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
-
-typealias UserId = Long
-
 @Entity
-@Table(name = "event_users", indexes = [Index(name = "user_tg_id", columnList = "telegramId")])
+@Table(name = "users", indexes = [Index(name = "user_tg_id", columnList = "telegramId")])
 class User(
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UserId = 0,
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0,
+
     @Column(nullable = false, unique = true)
     val telegramId: String,
+
     @Column(nullable = false)
-    val userName: String,
+    val name: String,
+
     @ManyToOne
     @JoinColumn(name = "event_id")
     var event: Event?,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val role: Role = Role.REGULAR,

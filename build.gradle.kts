@@ -21,13 +21,26 @@ repositories {
 }
 
 dependencies {
+    // Spring
     implementation("org.springframework.boot:spring-boot-starter")
+
+    // Pg
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.flywaydb:flyway-core")
+    implementation("org.postgresql:postgresql")
+
+    // Kotlin extensions
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Tg
     implementation("org.telegram:telegrambots-springboot-longpolling-starter:7.2.1")
     implementation("org.telegram:telegrambots-client:7.2.1")
-    runtimeOnly("org.postgresql:postgresql")
+
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
+//    implementation("ch.qos.logback:logback-classic:1.2.6")
+
+    // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql:1.19.1")
     testImplementation("io.mockk:mockk:1.13.10")

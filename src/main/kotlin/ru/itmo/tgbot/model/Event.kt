@@ -14,9 +14,9 @@ import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
 typealias EventId = Long
 
 @Entity
-@Table(indexes = [Index(name = "idx_event_name", columnList = "name")])
+@Table(name = "events", indexes = [Index(name = "idx_event_name", columnList = "name")])
 class Event(
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: EventId = 0L,
     @Column(nullable = false, unique = true)
     val name: String,
