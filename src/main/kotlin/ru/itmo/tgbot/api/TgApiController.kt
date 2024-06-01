@@ -1,6 +1,7 @@
 package ru.itmo.tgbot.api
 
 import io.micrometer.core.annotation.Timed
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Controller
@@ -23,6 +24,7 @@ import ru.itmo.tgbot.model.Role
 class TgApiController(
     private val eventService: EventService,
     @Value("\${telegram.bot.token:}") private val token: String,
+    private val meterRegistry: MeterRegistry
 ) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
     companion object : KLogging() {
         private const val INCORRECT_NUMBER_ARGUMENTS = "Incorrect number of arguments\n\nUsage: "
@@ -40,6 +42,8 @@ class TgApiController(
 
     @Timed(value = "telegram.message.processing.time", description = "Time taken to process the telegram message")
     override fun consume(update: Update) {
+        meterRegistry.counter("requests").increment();
+
         if (needProcessUpdate(update)) {
             val message = update.message
             val user = message.from
