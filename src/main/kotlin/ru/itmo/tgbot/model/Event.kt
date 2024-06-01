@@ -10,6 +10,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.FetchType
 import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
+import ru.itmo.tgbot.exception.AlreadyParticipatingException
 
 typealias EventId = Long
 
@@ -24,8 +25,13 @@ class Event(
     val users: MutableList<User>,
 ) {
     fun addUser(user: User) {
-        users.add(user)
-        user.event = this
+        val currentEvent = user.event
+        if (currentEvent == null) {
+            users.add(user)
+            user.event = this
+        } else {
+            throw AlreadyParticipatingException(currentEvent.name)
+        }
     }
 
     fun removeUser(user: User) {
