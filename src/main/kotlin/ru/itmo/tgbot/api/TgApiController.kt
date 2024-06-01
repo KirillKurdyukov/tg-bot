@@ -16,6 +16,7 @@ import ru.itmo.tgbot.exception.EventAlreadyExistsException
 import ru.itmo.tgbot.exception.NoAdminPermissionException
 import ru.itmo.tgbot.exception.NoEventFoundException
 import ru.itmo.tgbot.exception.ParticipationInEventNotFoundException
+import ru.itmo.tgbot.exception.AlreadyParticipatingException
 import ru.itmo.tgbot.model.Role
 
 @Controller
@@ -145,6 +146,8 @@ class TgApiController(
             return SendMessage.builder().text("Successfully checked-in!")
         } catch (e: NoEventFoundException) {
             return SendMessage.builder().text("Event doesn't exist")
+        } catch (e: AlreadyParticipatingException) {
+            return SendMessage.builder().text("Already participating in ${e.eventName}")
         }
     }
 

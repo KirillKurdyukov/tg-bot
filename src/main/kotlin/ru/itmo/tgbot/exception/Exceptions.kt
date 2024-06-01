@@ -11,3 +11,5 @@ class NoUserFoundException: RuntimeException()
 class ParticipationInEventNotFoundException: RuntimeException()
 
 class UserAlreadyExistsException(cause: Throwable): RuntimeException(cause)
+
+class AlreadyParticipatingException(val eventName: String): RuntimeException()
