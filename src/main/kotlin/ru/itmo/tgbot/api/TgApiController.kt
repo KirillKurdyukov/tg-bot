@@ -1,6 +1,5 @@
 package ru.itmo.tgbot.api
 
-import io.micrometer.core.annotation.Timed
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Value
@@ -40,9 +39,8 @@ class TgApiController(
         return this
     }
 
-    @Timed(value = "telegram.message.processing.time", description = "Time taken to process the telegram message")
     override fun consume(update: Update) {
-        meterRegistry.counter("requests").increment();
+        meterRegistry.counter("telegram.request").increment();
 
         if (needProcessUpdate(update)) {
             val message = update.message
@@ -85,6 +83,8 @@ class TgApiController(
             .plus(" lets you track who came to and left event!\n\n")
             .plus("We suggest using the /help command if this is")
             .plus(" your first time using a bot 📚")
+        
+        meterRegistry.counter("telegram.response.success").increment();
         return SendMessage
                 .builder()
                 .text(text)
@@ -113,6 +113,7 @@ class TgApiController(
             """.trimMargin())
         }
 
+        meterRegistry.counter("telegram.response.success").increment();
         return SendMessage
                 .builder()
                 .text(text)
@@ -129,6 +130,7 @@ class TgApiController(
             text = text.plus("\n\nyou are admin\\!")
         }
 
+        meterRegistry.counter("telegram.response.success").increment();
         return SendMessage
                 .builder()
                 .parseMode(ParseMode.MARKDOWNV2)
@@ -140,6 +142,7 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/check_in <event>")
 
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text(text)
         }
 
@@ -147,10 +150,13 @@ class TgApiController(
         try {
             eventService.addUserToEvent(userTelegramId, eventName)
 
+            meterRegistry.counter("telegram.response.success").increment();
             return SendMessage.builder().text("Successfully checked-in!")
         } catch (e: NoEventFoundException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text("Event doesn't exist")
         } catch (e: AlreadyParticipatingException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text("Already participating in ${e.eventName}")
         }
     }
@@ -160,16 +166,21 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/check_out <event>")
 
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text(text)
         }
 
         val eventName = args[0]
         try {
             eventService.deleteUserFromEvent(userTelegramId, eventName)
+
+            meterRegistry.counter("telegram.response.success").increment();
             return SendMessage.builder().text("Successfully checked-out!")
         } catch (e: NoEventFoundException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text("Event doesn't exist")
         } catch (e: ParticipationInEventNotFoundException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage.builder().text("You didn't participate in this event")
         }
     }
@@ -179,6 +190,7 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/list_users <event>")
 
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage
                 .builder()
                 .text(text)
@@ -188,15 +200,18 @@ class TgApiController(
         try {
             val users = eventService.getUsers(eventName)
             return if (users.isNotEmpty()) {
+                meterRegistry.counter("telegram.response.success").increment();
                 SendMessage
                     .builder()
                     .text(users.joinToString("\n"))
             } else {
+                meterRegistry.counter("telegram.response.success").increment();
                 SendMessage
                     .builder()
                     .text("No users")
             }
         } catch (e: NoEventFoundException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage
                 .builder()
                 .text("Event doesn't exist")
@@ -208,6 +223,7 @@ class TgApiController(
             val text = INCORRECT_NUMBER_ARGUMENTS
                 .plus("/add_event <event>")
 
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage
                 .builder()
                 .text(text)
@@ -216,14 +232,18 @@ class TgApiController(
         val eventName = args[0]
         try {
             eventService.addEvent(userTelegramId, eventName)
+
+            meterRegistry.counter("telegram.response.success").increment();
             return SendMessage
                 .builder()
                 .text("Event is successfully added!")
         } catch (e: NoAdminPermissionException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage
                 .builder()
                 .text("You don't have enough permissions")
         } catch (e: EventAlreadyExistsException) {
+            meterRegistry.counter("telegram.response.error").increment();
             return SendMessage
                 .builder()
                 .text("Event already exist")
@@ -231,6 +251,8 @@ class TgApiController(
     }
 
     private fun unknownCommand(): SendMessage.SendMessageBuilder<*, *> {
+        meterRegistry.counter("telegram.response.error").increment();
+
         return SendMessage
                 .builder()
                 .text("Unknown command: try to use /help\n")
